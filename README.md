@@ -15,6 +15,35 @@ It replays **facts**. It does not predict behaviour change, and it says so on ev
 
 ---
 
+## Run M0 locally
+
+Install Docker with Compose, JDK 21 and Node.js 22. From the project root, run each command in its own terminal.
+
+| Service | Command on Windows |
+|---|---|
+| PostgreSQL | `docker compose up -d --wait` |
+| Spring Boot API | `cd backend`, then `.\mvnw.cmd spring-boot:run` |
+| Next.js | `cd frontend`, run `npm ci` once, then `npm run dev` |
+
+On macOS or Linux, use `sh ./mvnw spring-boot:run` in the backend directory.
+Open the local URL printed by Next.js (usually [localhost:3000](http://localhost:3000)), choose **Create an account**, and enter a workspace name, email and password.
+After signup, the workspace shows dataset and policy counts and recent runs. Sign out and sign back in to return to it.
+The API exposes its health at [Actuator health](http://localhost:8080/actuator/health).
+
+The local database uses port 5432 and a Docker volume. `docker compose stop` stops PostgreSQL and preserves the data.
+The API accepts `BRANCHLAB_DB_URL` (JDBC), `BRANCHLAB_DB_USER` and `BRANCHLAB_DB_PASSWORD` for a separate database.
+The frontend proxies API calls to `BRANCHLAB_API_ORIGIN`, which defaults to `http://127.0.0.1:8080`.
+
+The API generates a local signing key on startup. Set `BRANCHLAB_JWT_SECRET` to a Base64-encoded random key of at least 32 bytes to keep sessions across restarts.
+Set `BRANCHLAB_SECURE_COOKIES=true` when serving over HTTPS. Access tokens last 15 minutes and refresh cookies last seven days.
+
+### Verify M0
+
+- **API and database** — Run `.\mvnw.cmd verify` in `backend` with Docker running. Testcontainers starts a separate PostgreSQL instance for the tests.
+- **Frontend** — Run `npm run lint` and `npm run build` in `frontend`.
+- **Browser** — With the Compose database running and the frontend built, run `npx playwright install chromium` and `npm run test:e2e` in `frontend`. Leave ports 8080 and 3100 free. The test starts both apps and signs up with a unique test email.
+- **CI** — GitHub Actions runs these checks on pushes and pull requests.
+
 ## One-page summary
 
 | | |
